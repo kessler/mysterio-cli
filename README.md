@@ -1,6 +1,6 @@
 # Mysterio CLI
 
-A powerful, simplified command-line interface for [Mysterio](https://github.com/kessler/mysterio) - configuration and secrets management for Node.js applications with AWS Secrets Manager integration.
+A simplified command-line interface for [Mysterio](https://github.com/kessler/mysterio) - configuration and secrets management for Node.js applications with AWS Secrets Manager integration.
 
 ## Features
 
