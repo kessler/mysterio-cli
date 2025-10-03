@@ -1,0 +1,26 @@
+{
+  "name": "mysterio-cli",
+  "version": "1.0.0",
+  "description": "a cli tool to work with mysterio module",
+  "keywords": [
+    "mysterio",
+    "aws",
+    "secrets",
+    "config"
+  ],
+  "homepage": "https://github.com/kessler/mysterio-cli#readme",
+  "bugs": {
+    "url": "https://github.com/kessler/mysterio-cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kessler/mysterio-cli.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Yaniv Kessler",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "npx ava"
+  }
+}
