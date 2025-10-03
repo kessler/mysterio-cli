@@ -22,5 +22,17 @@
   "main": "index.mjs",
   "scripts": {
     "test": "npx ava"
+  },
+  "bin": {
+    "mysterio": "cli.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.901.0",
+    "@inquirer/prompts": "^7.8.6",
+    "ava": "^6.4.1",
+    "commander": "^14.0.1",
+    "human-id": "^4.1.1",
+    "mysterio": "^2.2.1",
+    "rc": "^1.2.8"
   }
 }

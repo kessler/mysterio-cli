@@ -1,0 +1,16 @@
+node_modules/
+.DS_Store
+*.log
+.mysteriorc
+config/
+.env
+.env.*
+coverage/
+.nyc_output/
+dist/
+build/
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
