@@ -32,10 +32,12 @@ program.command('init')
 program.command('get')
   .description('Get configuration from any source')
   .option('-e, --env <environment>', 'Environment', process.env.NODE_ENV || 'local')
-  .option('-s, --source <type>', 'Source: local|aws|merged (default: merged)')
+  .option('-s, --source <type>', 'Source: local|env|aws|rc|merged (default: merged)')
   .option('-f, --format <format>', 'Output format: json|env (default: json)')
   .option('-d, --config-dir <path>', 'Configuration directory', './config')
   .option('--save <file>', 'Save output to file')
+  .option('--unflatten', 'Convert dotted keys to nested objects (for aws/merged)')
+  .option('--merge-order <order>', 'Merge priority (comma-separated: default,env,secrets,rc)')
   .action(getConfig)
 
 // Core command 3: Set configuration

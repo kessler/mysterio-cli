@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import util from 'node:util'
-import { Mysterio, getSecretsClient } from 'mysterio'
+import { Mysterio, getAwsSecretsClient } from 'mysterio'
 import { input, confirm, select, password } from '@inquirer/prompts'
 import { humanId } from 'human-id'
 import { config } from './config.mjs'
@@ -64,9 +64,9 @@ export async function readConfig(options) {
 
   try {
     const mysterio = new Mysterio({
+      ...config,
       env: options.env,
-      configDirPath: options.configDir,
-      ...config
+      configDirPath: options.configDir
     })
 
     let result
@@ -74,11 +74,11 @@ export async function readConfig(options) {
     if (options.secretsOnly) {
       result = await mysterio.getSecrets()
     } else if (options.localOnly) {
-      result = await mysterio.getDefaultConfigs()
+      result = await mysterio.getDefaultConfig()
     } else if (options.merge) {
       result = await mysterio.getMerged()
     } else {
-      result = await mysterio.getDefaultConfigs()
+      result = await mysterio.getDefaultConfig()
     }
 
     console.log(JSON.stringify(result, null, 2))
@@ -196,7 +196,7 @@ export async function getSecrets(options) {
   try {
     if (options.get) {
       const secretName = `${packageName}/${options.env}`
-      const secretsClient = getSecretsClient(config.awsParams)
+      const secretsClient = getAwsSecretsClient(config.awsParams)
       const secrets = await secretsClient(secretName)
 
       console.log('🔐 Secrets retrieved:')
@@ -245,9 +245,9 @@ export async function mergeConfigs(options) {
 
   try {
     const mysterio = new Mysterio({
+      ...config,
       env: options.env,
-      configDirPath: options.configDir,
-      ...config
+      configDirPath: options.configDir
     })
 
     const merged = await mysterio.getMerged()
@@ -539,27 +539,35 @@ export async function getConfig(options) {
 
   try {
     const mysterio = new Mysterio({
+      ...config,
       env: options.env || process.env.NODE_ENV || "local",
-      configDirPath: options.configDir || config.configDirPath || "./config",
-      ...config
+      configDirPath: options.configDir || config.configDirPath || "./config"
     })
 
     let result
     const source = options.source || "merged"
+    const unflatten = options.unflatten || false
+    const mergeOrder = options.mergeOrder?.split(',') || undefined
 
     switch (source) {
       case "local":
-        result = await mysterio.getDefaultConfigs()
+        result = await mysterio.getDefaultConfig()
+        break
+      case "env":
+        result = await mysterio.getEnvConfigs()
         break
       case "aws":
-        result = await mysterio.getSecrets()
+        result = await mysterio.getSecrets(unflatten)
+        break
+      case "rc":
+        result = await mysterio.getRcConfigs()
         break
       case "merged":
       case "all":
-        result = await mysterio.getMerged()
+        result = await mysterio.getMerged(mergeOrder, unflatten)
         break
       default:
-        throw new Error(`Invalid source: ${source}. Use "local", "aws", or "merged"`)
+        throw new Error(`Invalid source: ${source}. Use "local", "env", "aws", "rc", or "merged"`)
     }
 
     // Format output
@@ -687,7 +695,7 @@ async function applyConfigValue(key, value, env, target, configDir) {
 
     try {
       // Get existing secret
-      const secretsClient = getSecretsClient({ region })
+      const secretsClient = getAwsSecretsClient({ region })
       const existingSecrets = await secretsClient(secretName)
 
       // Update with new value
@@ -795,7 +803,7 @@ export async function awsCommand(action, options) {
       case 'pull': {
         // Pull AWS secrets to local config
         try {
-          const secretsClient = getSecretsClient({ region })
+          const secretsClient = getAwsSecretsClient({ region })
           const secrets = await secretsClient(secretName)
 
           const configFile = path.join(configDir, `${environment}.json`)
@@ -847,7 +855,7 @@ export async function awsCommand(action, options) {
         }
 
         try {
-          const secretsClient = getSecretsClient({ region })
+          const secretsClient = getAwsSecretsClient({ region })
           awsConfig = await secretsClient(secretName)
         } catch {
           console.log('☁️  No AWS secret found')
@@ -977,7 +985,7 @@ export async function envCommand(action, name, options) {
             const secretName = `${config.packageName}/${env}`
             try {
               const region = config.awsRegion || 'us-east-1'
-              const secretsClient = getSecretsClient({ region })
+              const secretsClient = getAwsSecretsClient({ region })
               await secretsClient(secretName)
               status += ' ☁️  [AWS ✓]'
             } catch {

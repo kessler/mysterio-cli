@@ -1,6 +1,6 @@
 # Mysterio CLI
 
-A simplified command-line interface for [Mysterio](https://github.com/kessler/mysterio) - configuration and secrets management for Node.js applications with AWS Secrets Manager integration.
+A powerful, simplified command-line interface for [Mysterio](https://github.com/amitosdev/mysterio) - configuration and secrets management for Node.js applications with AWS Secrets Manager integration.
 
 ## Features
 
@@ -10,6 +10,8 @@ A simplified command-line interface for [Mysterio](https://github.com/kessler/my
 - 🔐 **AWS Integration** - Seamless AWS Secrets Manager operations
 - 📁 **Local Configuration** - JSON-based local config files
 - 🔄 **Bidirectional Sync** - Sync between local and AWS
+- 🔀 **Custom Merge Order** - Control config source priority
+- 📦 **Unflatten Support** - Convert dotted AWS keys to nested objects
 
 ## Installation
 
@@ -73,10 +75,19 @@ mysterio get [options]
 
 **Options:**
 - `-e, --env <environment>` - Target environment (default: `NODE_ENV` or `local`)
-- `-s, --source <type>` - Source: `local`, `aws`, or `merged` (default: `merged`)
+- `-s, --source <type>` - Source: `local`, `env`, `aws`, `rc`, or `merged` (default: `merged`)
 - `-f, --format <format>` - Output format: `json` or `env` (default: `json`)
 - `-d, --config-dir <path>` - Configuration directory (default: `./config`)
 - `--save <file>` - Save output to file
+- `--unflatten` - Convert dotted keys to nested objects (for aws/merged sources)
+- `--merge-order <order>` - Custom merge priority (comma-separated: `default,env,secrets,rc`)
+
+**Source Types:**
+- `local` - Base configuration from `default.json`
+- `env` - Environment-specific config from `{environment}.json`
+- `aws` - AWS Secrets Manager secrets
+- `rc` - Local `.mysteriorc` overrides
+- `merged` - All sources merged (default)
 
 **Examples:**
 ```bash
@@ -86,11 +97,17 @@ mysterio get --env production
 # Get only AWS secrets
 mysterio get --env production --source aws
 
+# Get AWS secrets with dotted keys unflattened
+mysterio get --env production --source aws --unflatten
+
 # Save as .env file
 mysterio get --env production --format env --save .env.production
 
-# Get local configuration only
-mysterio get --env development --source local
+# Get environment-specific config only
+mysterio get --env development --source env
+
+# Custom merge order (secrets override everything)
+mysterio get --env production --merge-order default,env,rc,secrets
 ```
 
 ### 3. `mysterio set`
@@ -247,6 +264,43 @@ Secrets are stored in AWS Secrets Manager as:
 
 Example: `my-app/production`
 
+### Merge Order
+
+When using `--source merged`, configuration sources are merged in this default order (later sources override earlier ones):
+
+1. `default` - `config/default.json`
+2. `env` - `config/{environment}.json`
+3. `secrets` - AWS Secrets Manager
+4. `rc` - `.mysteriorc` (local overrides)
+
+Customize with `--merge-order`:
+```bash
+# Make AWS secrets override everything
+mysterio get --merge-order default,env,rc,secrets
+
+# Ignore AWS, merge only local sources
+mysterio get --merge-order default,env,rc
+```
+
+### Unflatten Dotted Keys
+
+AWS Secrets Manager's Key/Value tab stores flat keys. Use `--unflatten` to convert dotted keys to nested objects:
+
+```bash
+# AWS secret with keys: database.host, database.port
+mysterio get --source aws --unflatten
+```
+
+Result:
+```json
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432
+  }
+}
+```
+
 ## Common Workflows
 
 ### Local Development
@@ -387,4 +441,4 @@ Issues and pull requests are welcome at [GitHub](https://github.com/kessler/myst
 
 ## Related
 
-- [Mysterio](https://github.com/kessler/mysterio) - Core configuration and secrets management library
+- [Mysterio](https://github.com/amitosdev/mysterio) - Core configuration and secrets management library
