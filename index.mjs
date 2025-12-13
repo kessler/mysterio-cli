@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import util from 'node:util'
+import { constantCase } from 'case-anything'
 import { Mysterio, getAwsSecretsClient } from 'mysterio'
 import { input, confirm, select, password } from '@inquirer/prompts'
 import { humanId } from 'human-id'
@@ -581,9 +582,8 @@ export async function getConfig(options) {
       case "env":
         output = Object.entries(result)
           .map(([key, value]) => {
-            const envKey = key.replace(/([A-Z])/g, "_$1").toUpperCase()
             const envValue = typeof value === "object" ? JSON.stringify(value) : value
-            return `${envKey}=${envValue}`
+            return `${constantCase(key)}=${envValue}`
           })
           .join("\n")
         break
