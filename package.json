@@ -1,6 +1,6 @@
 {
   "name": "mysterio-cli",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "a cli tool to work with mysterio module",
   "keywords": [
     "mysterio",
